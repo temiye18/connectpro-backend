@@ -178,6 +178,61 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+## Meeting Endpoints
+
+### 1. Create Meeting (Instant Meeting)
+Create a new instant meeting.
+
+**Endpoint:** `POST /meetings`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Request Body:**
+```json
+{
+  "title": "Project Discussion",
+  "settings": {
+    "camera": true,
+    "microphone": true
+  }
+}
+```
+
+**Validation Rules:**
+- `title`: Optional, 1-100 characters
+- `settings`: Optional object
+- `settings.camera`: Optional boolean (default: true)
+- `settings.microphone`: Optional boolean (default: true)
+
+**Success Response (201):**
+```json
+{
+  "meetingId": "6542abc123def456789",
+  "meetingLink": "http://localhost:3000/meeting/6542abc123def456789",
+  "meetingCode": "A1B2C3D4",
+  "createdAt": "2024-01-20T10:30:00.000Z"
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+---
+
 ## Error Responses
 
 ### Common Error Codes

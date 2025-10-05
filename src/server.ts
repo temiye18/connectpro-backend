@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { connectDB } from "./config/database";
 import authRoutes from "./routes/auth.routes";
+import meetingRoutes from "./routes/meeting.routes";
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.get("/", (_req: Request, res: Response) => {
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/meetings", meetingRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

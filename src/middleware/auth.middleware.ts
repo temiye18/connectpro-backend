@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.model';
+import { Types } from 'mongoose';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: {
+    userId: string;
+    email: string;
+    name: string;
+  };
 }
 
 export const authMiddleware = async (
@@ -36,7 +41,11 @@ export const authMiddleware = async (
       return;
     }
 
-    req.user = user;
+    req.user = {
+      userId: (user._id as Types.ObjectId).toString(),
+      email: user.email,
+      name: user.name,
+    };
     next();
   } catch (error) {
     res.status(401).json({

@@ -378,12 +378,9 @@ This project is licensed under the MIT License.
 
 ## 🔗 Related Projects
 
-- [ConnectPro Frontend](../connectpro-frontend) - Next.js/React frontend application
+- [ConnectPro Frontend](https://github.com/temiye18/connectpro-frontend) - Next.js/React frontend application
 
 ## 📧 Support
 
-For support, email support@connectpro.com or open an issue on GitHub.
+For support, email akinyemitemiye18@gmail.com or open an issue on GitHub.
 
----
-
-Built with ❤️ using Node.js, Express, and TypeScript

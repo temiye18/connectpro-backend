@@ -233,6 +233,315 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+### 2. Get Recent Meetings
+Fetch user's recent meetings for dashboard display.
+
+**Endpoint:** `GET /meetings/recent`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Query Parameters:**
+- `limit` (optional): Number of meetings to return (1-50, default: 10)
+
+**Example Request:**
+```
+GET /api/meetings/recent?limit=5
+```
+
+**Validation Rules:**
+- `limit`: Optional integer between 1 and 50
+
+**Success Response (200):**
+```json
+{
+  "meetings": [
+    {
+      "_id": "6542abc123def456789",
+      "title": "Team Standup",
+      "date": "2024-01-20T10:30:00.000Z",
+      "meetingCode": "A1B2C3D4",
+      "status": "scheduled"
+    },
+    {
+      "_id": "6542xyz987fed654321",
+      "title": "Project Review",
+      "date": "2024-01-19T14:00:00.000Z",
+      "meetingCode": "B2C3D4E5",
+      "status": "ended"
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (400 - Invalid Limit):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "limit",
+      "message": "Limit must be between 1 and 50"
+    }
+  ]
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+---
+
+### 3. Join Meeting
+Join an existing meeting by meeting code.
+
+**Endpoint:** `POST /meetings/join`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**Request Body:**
+```json
+{
+  "meetingCode": "A1B2C3D4",
+  "name": "John Doe",
+  "settings": {
+    "camera": true,
+    "microphone": true
+  }
+}
+```
+
+**Validation Rules:**
+- `meetingCode`: Required string
+- `name`: Optional, 2-50 characters
+- `settings`: Optional object
+- `settings.camera`: Optional boolean
+- `settings.microphone`: Optional boolean
+
+**Success Response (200):**
+```json
+{
+  "meetingId": "6542abc123def456789",
+  "roomToken": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
+  "participants": [
+    {
+      "userId": "6542abc123def456789",
+      "name": "John Doe",
+      "joinedAt": "2024-01-20T10:30:00.000Z"
+    },
+    {
+      "userId": "6542xyz987fed654321",
+      "name": "Jane Smith",
+      "joinedAt": "2024-01-20T10:31:00.000Z"
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "message": "Meeting not found"
+}
+```
+
+**Error Response (400 - Meeting Ended):**
+```json
+{
+  "message": "Meeting has ended"
+}
+```
+
+**Error Response (400 - Validation):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "meetingCode",
+      "message": "Meeting code is required"
+    }
+  ]
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+---
+
+### 4. Start Existing Meeting
+Start a scheduled meeting by meeting ID. Only the host can start the meeting.
+
+**Endpoint:** `POST /meetings/:id/start`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `id`: Meeting ID (MongoDB ObjectId)
+
+**Success Response (200):**
+```json
+{
+  "meetingId": "6542abc123def456789",
+  "meetingLink": "http://localhost:3000/meeting/6542abc123def456789",
+  "status": "active"
+}
+```
+
+**Error Response (400 - Invalid ID):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "id",
+      "message": "Invalid meeting ID"
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "message": "Only the host can start the meeting"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "message": "Meeting not found"
+}
+```
+
+**Error Response (400 - Meeting Ended):**
+```json
+{
+  "message": "Meeting has already ended"
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+---
+
+### 5. Get Meeting Details
+Retrieve detailed information about a meeting by ID or meeting code.
+
+**Endpoint:** `GET /meetings/:id`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `id`: Meeting ID (MongoDB ObjectId) or Meeting Code (e.g., "A1B2C3D4")
+
+**Success Response (200):**
+```json
+{
+  "meeting": {
+    "_id": "6542abc123def456789",
+    "title": "Team Standup",
+    "code": "A1B2C3D4",
+    "link": "http://localhost:3000/meeting/6542abc123def456789",
+    "host": {
+      "_id": "6542xyz987fed654321",
+      "name": "John Doe",
+      "email": "john@example.com"
+    },
+    "participants": [
+      {
+        "userId": "6542def456ghi789012",
+        "name": "Jane Smith",
+        "joinedAt": "2024-01-20T10:30:00.000Z",
+        "leftAt": null
+      }
+    ],
+    "status": "active",
+    "createdAt": "2024-01-20T10:00:00.000Z",
+    "startedAt": "2024-01-20T10:30:00.000Z",
+    "endedAt": null
+  }
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "message": "Meeting not found"
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+**Notes:**
+- This endpoint accepts both MongoDB ObjectId and meeting code in the `:id` parameter
+- Any authenticated user can view meeting details (not restricted to host or participants)
+- The `startedAt` and `endedAt` fields are only included if they have values
+
+---
+
 ## Error Responses
 
 ### Common Error Codes

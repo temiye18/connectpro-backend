@@ -82,22 +82,34 @@ A robust, scalable backend API for ConnectPro video conferencing platform built 
 ```
 connectpro-backend/
 ├── src/
+│   ├── __tests__/           # Test files
+│   │   ├── controllers/     # Controller tests
+│   │   │   ├── auth.controller.test.ts
+│   │   │   └── meeting.controller.test.ts
+│   │   ├── helpers/         # Test helpers
+│   │   │   └── testHelpers.ts
+│   │   └── setup.ts         # Test setup
 │   ├── config/              # Configuration files
 │   │   └── database.ts      # MongoDB connection
 │   ├── controllers/         # Request handlers
-│   │   └── auth.controller.ts
+│   │   ├── auth.controller.ts
+│   │   └── meeting.controller.ts
 │   ├── middleware/          # Express middlewares
 │   │   ├── auth.middleware.ts
 │   │   └── validate.middleware.ts
 │   ├── models/              # Mongoose models
-│   │   └── user.model.ts
+│   │   ├── user.model.ts
+│   │   └── meeting.model.ts
 │   ├── routes/              # API routes
-│   │   └── auth.routes.ts
+│   │   ├── auth.routes.ts
+│   │   └── meeting.routes.ts
 │   ├── docs/                # API documentation
 │   │   └── api-doc.md
 │   └── server.ts            # Application entry point
 ├── dist/                    # Compiled JavaScript (generated)
+├── coverage/                # Test coverage reports (generated)
 ├── .env                     # Environment variables (create this)
+├── jest.config.ts           # Jest configuration
 ├── package.json
 └── tsconfig.json
 ```
@@ -144,6 +156,12 @@ Full API documentation is available at [`src/docs/api-doc.md`](./src/docs/api-do
 | POST | `/api/auth/login` | Login user | No |
 | GET | `/api/auth/me` | Get current user | Yes |
 | POST | `/api/auth/logout` | Logout user | Yes |
+
+#### Meeting Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/meetings` | Create instant meeting | Yes |
 
 ### Example: Register User
 
@@ -209,9 +227,13 @@ curl -X GET http://localhost:5000/api/auth/me \
 
 ## 🧪 Testing
 
+The project includes comprehensive unit tests for all endpoints and features.
+
+### Running Tests
+
 ```bash
 # Run all tests
-npm run test
+npm test
 
 # Run tests in watch mode
 npm run test:watch
@@ -220,10 +242,66 @@ npm run test:watch
 npm run test:coverage
 ```
 
-Testing stack:
-- Jest for test runner
-- Supertest for API testing
-- ts-jest for TypeScript support
+### Testing Stack
+
+- **Jest 30.2.0** - Test runner and assertion library
+- **Supertest 7.1.4** - HTTP assertion library
+- **ts-jest 29.4.4** - TypeScript support for Jest
+- **MongoDB Memory Server 10.2.2** - In-memory MongoDB for testing
+
+### Test Structure
+
+Tests are organized using Option 1 (Mirror Source Structure):
+
+```
+src/
+├── __tests__/
+│   ├── controllers/              # Controller tests
+│   │   ├── auth.controller.test.ts
+│   │   └── meeting.controller.test.ts
+│   ├── helpers/                  # Test utilities
+│   │   └── testHelpers.ts
+│   └── setup.ts                  # Test configuration
+```
+
+### Writing Tests
+
+**Naming Convention:**
+- Controller tests: `[filename].controller.test.ts`
+- Middleware tests: `[filename].middleware.test.ts`
+- Model tests: `[filename].model.test.ts`
+
+**Example Test:**
+```typescript
+import request from 'supertest';
+import express from 'express';
+import authRoutes from '../../routes/auth.routes';
+import { createTestUser, generateToken } from '../helpers/testHelpers';
+
+describe('Auth Endpoints', () => {
+  it('should register a new user', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({
+        email: 'test@example.com',
+        password: 'SecurePass123',
+        name: 'Test User'
+      })
+      .expect(201);
+
+    expect(response.body.success).toBe(true);
+  });
+});
+```
+
+### Test Coverage
+
+Current test coverage:
+- ✅ Authentication endpoints: 14 tests
+- ✅ Meeting endpoints: 11 tests
+- ✅ Total: 25 tests passing
+
+Run `npm run test:coverage` to see detailed coverage reports.
 
 ## 🚀 Deployment
 
@@ -269,6 +347,7 @@ CMD ["npm", "start"]
 - **Controllers**: `*.controller.ts` (e.g., `auth.controller.ts`)
 - **Routes**: `*.routes.ts` (e.g., `auth.routes.ts`)
 - **Middleware**: `*.middleware.ts` (e.g., `auth.middleware.ts`)
+- **Tests**: `*.test.ts` (e.g., `auth.controller.test.ts`)
 
 ### Code Style
 - Use TypeScript strict mode

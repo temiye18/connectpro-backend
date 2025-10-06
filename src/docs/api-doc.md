@@ -178,6 +178,67 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+### 5. Create Guest Session
+Create a temporary guest user session without registration.
+
+**Endpoint:** `POST /auth/guest`
+
+**Request Body:**
+```json
+{
+  "name": "Guest User"
+}
+```
+
+**Validation Rules:**
+- `name`: Required, 2-50 characters
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "message": "Guest session created successfully",
+  "data": {
+    "user": {
+      "id": "6542abc123def456789",
+      "name": "Guest User",
+      "isGuest": true
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+**Error Response (400 - Validation):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "name",
+      "message": "Name must be between 2 and 50 characters"
+    }
+  ]
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "success": false,
+  "message": "Server error"
+}
+```
+
+**Notes:**
+- Guest tokens expire after 24 hours (vs 7 days for regular users)
+- Guest users can create and join meetings
+- Guest users have a unique auto-generated email internally
+- Guest sessions work with all meeting endpoints
+
+---
+
 ## Meeting Endpoints
 
 ### 1. Create Meeting (Instant Meeting)

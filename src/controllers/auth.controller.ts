@@ -122,7 +122,12 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
     res.status(200).json({
       success: true,
       data: {
-        user: req.user,
+        user: {
+          id: req.user?.userId,
+          email: req.user?.email,
+          name: req.user?.name,
+          isGuest: req.user?.isGuest,
+        },
       },
     });
   } catch (error: any) {
@@ -144,6 +149,48 @@ export const logout = async (req: AuthRequest, res: Response): Promise<void> => 
     res.status(200).json({
       success: true,
       message: 'Logout successful',
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Create guest user session
+// @route   POST /api/auth/guest
+// @access  Public
+export const createGuestSession = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name } = req.body;
+
+    // Create guest user with unique identifier
+    const guestUser = await User.create({
+      name,
+      isGuest: true,
+      email: `guest_${Date.now()}_${Math.random().toString(36).substring(7)}@guest.local`,
+    });
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: (guestUser._id as Types.ObjectId).toString(), isGuest: true },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' } // Guest tokens expire after 24 hours
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Guest session created successfully',
+      data: {
+        user: {
+          id: (guestUser._id as Types.ObjectId).toString(),
+          name: guestUser.name,
+          isGuest: true,
+        },
+        token,
+      },
     });
   } catch (error: any) {
     res.status(500).json({

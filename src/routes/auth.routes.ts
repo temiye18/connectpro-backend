@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, getCurrentUser, logout } from '../controllers/auth.controller';
+import { register, login, getCurrentUser, logout, createGuestSession } from '../controllers/auth.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 
@@ -33,9 +33,17 @@ const loginValidation = [
     .withMessage('Password is required'),
 ];
 
+const guestSessionValidation = [
+  body('name')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters'),
+];
+
 // Routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
+router.post('/guest', guestSessionValidation, validate, createGuestSession);
 router.get('/me', authMiddleware, getCurrentUser);
 router.post('/logout', authMiddleware, logout);
 

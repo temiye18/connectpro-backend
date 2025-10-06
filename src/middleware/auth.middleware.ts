@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     userId: string;
     email: string;
     name: string;
+    isGuest: boolean;
   };
 }
 
@@ -29,6 +30,7 @@ export const authMiddleware = async (
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as {
       userId: string;
+      isGuest?: boolean;
     };
 
     const user = await User.findById(decoded.userId).select('-password');
@@ -43,8 +45,9 @@ export const authMiddleware = async (
 
     req.user = {
       userId: (user._id as Types.ObjectId).toString(),
-      email: user.email,
+      email: user.email || '',
       name: user.name,
+      isGuest: user.isGuest || false,
     };
     next();
   } catch (error) {

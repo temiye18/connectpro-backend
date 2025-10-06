@@ -6,6 +6,7 @@ export interface IUser extends Document {
   password: string;
   name: string;
   avatar?: string;
+  isGuest: boolean;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -15,15 +16,20 @@ const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: function(this: IUser) {
+        return !this.isGuest;
+      },
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
+      required: function(this: IUser) {
+        return !this.isGuest;
+      },
       minlength: [8, 'Password must be at least 8 characters long'],
       select: false,
     },
@@ -38,15 +44,19 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: null,
     },
+    isGuest: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Hash password before saving
+// Hash password before saving (skip for guest users)
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (this.isGuest || !this.isModified('password')) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);

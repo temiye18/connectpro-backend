@@ -154,6 +154,7 @@ Full API documentation is available at [`src/docs/api-doc.md`](./src/docs/api-do
 |--------|----------|-------------|---------------|
 | POST | `/api/auth/register` | Register new user | No |
 | POST | `/api/auth/login` | Login user | No |
+| POST | `/api/auth/guest` | Create guest session | No |
 | GET | `/api/auth/me` | Get current user | Yes |
 | POST | `/api/auth/logout` | Logout user | Yes |
 
@@ -301,9 +302,9 @@ describe('Auth Endpoints', () => {
 ### Test Coverage
 
 Current test coverage:
-- ✅ Authentication endpoints: 14 tests
+- ✅ Authentication endpoints: 22 tests
 - ✅ Meeting endpoints: 60 tests
-- ✅ Total: 74 tests passing
+- ✅ Total: 82 tests passing
 
 Run `npm run test:coverage` to see detailed coverage reports.
 

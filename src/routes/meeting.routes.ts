@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, query, param } from 'express-validator';
-import { createMeeting, getRecentMeetings, joinMeeting, startMeeting, getMeetingDetails } from '../controllers/meeting.controller';
+import { createMeeting, getRecentMeetings, joinMeeting, startMeeting, getMeetingDetails, leaveMeeting, endMeeting } from '../controllers/meeting.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validate.middleware';
 
@@ -34,11 +34,21 @@ const getMeetingDetailsValidation = [
   param('id').notEmpty().withMessage('Meeting ID or code is required'),
 ];
 
+const leaveMeetingValidation = [
+  param('id').notEmpty().withMessage('Meeting ID is required').isMongoId().withMessage('Invalid meeting ID'),
+];
+
+const endMeetingValidation = [
+  param('id').notEmpty().withMessage('Meeting ID is required').isMongoId().withMessage('Invalid meeting ID'),
+];
+
 // Routes
 router.post('/', authMiddleware, createMeetingValidation, validate, createMeeting);
 router.get('/recent', authMiddleware, getRecentMeetingsValidation, validate, getRecentMeetings);
 router.post('/join', authMiddleware, joinMeetingValidation, validate, joinMeeting);
 router.post('/:id/start', authMiddleware, startMeetingValidation, validate, startMeeting);
+router.post('/:id/leave', authMiddleware, leaveMeetingValidation, validate, leaveMeeting);
+router.post('/:id/end', authMiddleware, endMeetingValidation, validate, endMeeting);
 router.get('/:id', authMiddleware, getMeetingDetailsValidation, validate, getMeetingDetails);
 
 export default router;

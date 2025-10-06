@@ -297,3 +297,108 @@ export const getMeetingDetails = async (req: AuthRequest, res: Response): Promis
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// @desc    Leave a meeting
+// @route   POST /api/meetings/:id/leave
+// @access  Private
+export const leaveMeeting = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: 'Invalid meeting ID' });
+      return;
+    }
+
+    // Find meeting by ID
+    const meeting = await Meeting.findById(id);
+
+    if (!meeting) {
+      res.status(404).json({ message: 'Meeting not found' });
+      return;
+    }
+
+    // Find participant in the meeting
+    const participantIndex = meeting.participants.findIndex(
+      (p) => p.userId && (p.userId as Types.ObjectId).toString() === userId
+    );
+
+    if (participantIndex === -1) {
+      res.status(400).json({ message: 'You are not a participant in this meeting' });
+      return;
+    }
+
+    // Update participant's leftAt timestamp
+    meeting.participants[participantIndex].leftAt = new Date();
+    await meeting.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Left meeting successfully',
+    });
+  } catch (error) {
+    console.error('Leave meeting error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    End a meeting (host only)
+// @route   POST /api/meetings/:id/end
+// @access  Private
+export const endMeeting = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
+    // Validate ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: 'Invalid meeting ID' });
+      return;
+    }
+
+    // Find meeting by ID
+    const meeting = await Meeting.findById(id);
+
+    if (!meeting) {
+      res.status(404).json({ message: 'Meeting not found' });
+      return;
+    }
+
+    // Check if user is the host
+    if (meeting.host.toString() !== userId) {
+      res.status(403).json({ message: 'Only the host can end the meeting' });
+      return;
+    }
+
+    // Check if meeting has already ended
+    if (meeting.status === 'ended') {
+      res.status(400).json({ message: 'Meeting has already ended' });
+      return;
+    }
+
+    // Update meeting status to ended
+    meeting.status = 'ended';
+    meeting.endedAt = new Date();
+    await meeting.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Meeting ended successfully',
+    });
+  } catch (error) {
+    console.error('End meeting error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

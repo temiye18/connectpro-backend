@@ -987,4 +987,262 @@ describe('Meeting Endpoints', () => {
       expect(response3.body.meeting.status).toBe('ended');
     });
   });
+
+  describe('POST /api/meetings/:id/leave', () => {
+    it('should leave meeting successfully', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      // Join the meeting first
+      await request(app)
+        .post('/api/meetings/join')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ meetingCode: meeting.meetingCode })
+        .expect(200);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/leave`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Left meeting successfully');
+    });
+
+    it('should update participant leftAt timestamp', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      // Join the meeting
+      await request(app)
+        .post('/api/meetings/join')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ meetingCode: meeting.meetingCode })
+        .expect(200);
+
+      const beforeLeave = new Date();
+
+      await request(app)
+        .post(`/api/meetings/${meeting._id}/leave`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      const updatedMeeting = await Meeting.findById(meeting._id);
+      const participant = updatedMeeting?.participants.find(
+        (p) => p.userId?.toString() === (user._id as Types.ObjectId).toString()
+      );
+
+      expect(participant?.leftAt).toBeDefined();
+      expect(participant?.leftAt!.getTime()).toBeGreaterThanOrEqual(beforeLeave.getTime());
+    });
+
+    it('should fail if user is not a participant', async () => {
+      const host = await createTestUser({ email: 'host@example.com' });
+      const otherUser = await createTestUser({ email: 'other@example.com' });
+      const token = generateToken((otherUser._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(host._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/leave`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.message).toBe('You are not a participant in this meeting');
+    });
+
+    it('should fail with invalid meeting ID', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+
+      const response = await request(app)
+        .post('/api/meetings/invalid-id/leave')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Validation failed');
+    });
+
+    it('should fail with non-existent meeting ID', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const nonExistentId = new Types.ObjectId();
+
+      const response = await request(app)
+        .post(`/api/meetings/${nonExistentId}/leave`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body.message).toBe('Meeting not found');
+    });
+
+    it('should fail without authentication', async () => {
+      const user = await createTestUser();
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/leave`)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Access denied. No token provided.');
+    });
+
+    it('should fail with invalid token', async () => {
+      const user = await createTestUser();
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/leave`)
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid or expired token.');
+    });
+  });
+
+  describe('POST /api/meetings/:id/end', () => {
+    it('should end meeting successfully as host', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId, { status: 'active' });
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Meeting ended successfully');
+    });
+
+    it('should update meeting status to ended', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId, { status: 'active' });
+
+      await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      const updatedMeeting = await Meeting.findById(meeting._id);
+      expect(updatedMeeting?.status).toBe('ended');
+      expect(updatedMeeting?.endedAt).toBeDefined();
+    });
+
+    it('should set endedAt timestamp', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId, { status: 'active' });
+
+      const beforeEnd = new Date();
+
+      await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      const updatedMeeting = await Meeting.findById(meeting._id);
+      expect(updatedMeeting?.endedAt).toBeDefined();
+      expect(updatedMeeting?.endedAt!.getTime()).toBeGreaterThanOrEqual(beforeEnd.getTime());
+    });
+
+    it('should fail if user is not the host', async () => {
+      const host = await createTestUser({ email: 'host@example.com' });
+      const otherUser = await createTestUser({ email: 'other@example.com' });
+      const token = generateToken((otherUser._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(host._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(response.body.message).toBe('Only the host can end the meeting');
+    });
+
+    it('should fail if meeting has already ended', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId, { status: 'ended' });
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.message).toBe('Meeting has already ended');
+    });
+
+    it('should fail with invalid meeting ID', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+
+      const response = await request(app)
+        .post('/api/meetings/invalid-id/end')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Validation failed');
+    });
+
+    it('should fail with non-existent meeting ID', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const nonExistentId = new Types.ObjectId();
+
+      const response = await request(app)
+        .post(`/api/meetings/${nonExistentId}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body.message).toBe('Meeting not found');
+    });
+
+    it('should fail without authentication', async () => {
+      const user = await createTestUser();
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Access denied. No token provided.');
+    });
+
+    it('should fail with invalid token', async () => {
+      const user = await createTestUser();
+      const meeting = await createTestMeeting(user._id as Types.ObjectId);
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Invalid or expired token.');
+    });
+
+    it('should allow host to end scheduled meeting', async () => {
+      const user = await createTestUser();
+      const token = generateToken((user._id as Types.ObjectId).toString());
+      const meeting = await createTestMeeting(user._id as Types.ObjectId, { status: 'scheduled' });
+
+      const response = await request(app)
+        .post(`/api/meetings/${meeting._id}/end`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+
+      const updatedMeeting = await Meeting.findById(meeting._id);
+      expect(updatedMeeting?.status).toBe('ended');
+    });
+  });
 });

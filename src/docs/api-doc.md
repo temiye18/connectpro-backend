@@ -603,6 +603,154 @@ Authorization: Bearer <jwt_token>
 
 ---
 
+### 6. Leave Meeting
+Leave an active meeting as a participant.
+
+**Endpoint:** `POST /meetings/:id/leave`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `id`: Meeting ID (MongoDB ObjectId)
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Left meeting successfully"
+}
+```
+
+**Error Response (400 - Not a Participant):**
+```json
+{
+  "message": "You are not a participant in this meeting"
+}
+```
+
+**Error Response (400 - Invalid ID):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "id",
+      "message": "Invalid meeting ID"
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "message": "Meeting not found"
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+**Notes:**
+- Updates the participant's `leftAt` timestamp
+- Does not remove the participant from the participants list
+- User must have previously joined the meeting
+
+---
+
+### 7. End Meeting
+End a meeting (host only).
+
+**Endpoint:** `POST /meetings/:id/end`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+**URL Parameters:**
+- `id`: Meeting ID (MongoDB ObjectId)
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Meeting ended successfully"
+}
+```
+
+**Error Response (400 - Already Ended):**
+```json
+{
+  "message": "Meeting has already ended"
+}
+```
+
+**Error Response (400 - Invalid ID):**
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "id",
+      "message": "Invalid meeting ID"
+    }
+  ]
+}
+```
+
+**Error Response (401):**
+```json
+{
+  "message": "User not authenticated"
+}
+```
+
+**Error Response (403):**
+```json
+{
+  "message": "Only the host can end the meeting"
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "message": "Meeting not found"
+}
+```
+
+**Error Response (500):**
+```json
+{
+  "message": "Server error"
+}
+```
+
+**Notes:**
+- Only the meeting host can end the meeting
+- Sets meeting status to `ended`
+- Sets the `endedAt` timestamp
+- Can end meetings in `scheduled` or `active` status
+
+---
+
 ## Error Responses
 
 ### Common Error Codes

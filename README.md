@@ -166,6 +166,8 @@ Full API documentation is available at [`src/docs/api-doc.md`](./src/docs/api-do
 | GET | `/api/meetings/recent` | Get recent meetings | Yes |
 | POST | `/api/meetings/join` | Join a meeting by code | Yes |
 | POST | `/api/meetings/:id/start` | Start existing meeting | Yes |
+| POST | `/api/meetings/:id/leave` | Leave a meeting | Yes |
+| POST | `/api/meetings/:id/end` | End a meeting (host only) | Yes |
 | GET | `/api/meetings/:id` | Get meeting details by ID or code | Yes |
 
 ### Example: Register User
@@ -303,8 +305,8 @@ describe('Auth Endpoints', () => {
 
 Current test coverage:
 - ✅ Authentication endpoints: 22 tests
-- ✅ Meeting endpoints: 60 tests
-- ✅ Total: 82 tests passing
+- ✅ Meeting endpoints: 77 tests
+- ✅ Total: 99 tests passing
 
 Run `npm run test:coverage` to see detailed coverage reports.
 

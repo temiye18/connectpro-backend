@@ -82,20 +82,25 @@ export const getRecentMeetings = async (req: AuthRequest, res: Response): Promis
     const meetings = await Meeting.find({ host: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .select('_id title createdAt meetingCode status')
+      .select('_id title createdAt meetingCode status participants')
       .lean();
 
     // Format response
     const formattedMeetings = meetings.map((meeting) => ({
       _id: meeting._id.toString(),
       title: meeting.title,
-      date: meeting.createdAt,
+      createdAt: meeting.createdAt,
       meetingCode: meeting.meetingCode,
       status: meeting.status,
+      participants: meeting.participants || [],
     }));
 
     res.status(200).json({
-      meetings: formattedMeetings,
+      success: true,
+      data: {
+        meetings: formattedMeetings,
+        total: formattedMeetings.length,
+      },
     });
   } catch (error) {
     console.error('Get recent meetings error:', error);

@@ -202,12 +202,17 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.meetings).toHaveLength(3);
-      expect(response.body.meetings[0]).toHaveProperty('_id');
-      expect(response.body.meetings[0]).toHaveProperty('title');
-      expect(response.body.meetings[0]).toHaveProperty('date');
-      expect(response.body.meetings[0]).toHaveProperty('meetingCode');
-      expect(response.body.meetings[0]).toHaveProperty('status');
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('meetings');
+      expect(response.body.data).toHaveProperty('total');
+      expect(response.body.data.meetings).toHaveLength(3);
+      expect(response.body.data.total).toBe(3);
+      expect(response.body.data.meetings[0]).toHaveProperty('_id');
+      expect(response.body.data.meetings[0]).toHaveProperty('title');
+      expect(response.body.data.meetings[0]).toHaveProperty('createdAt');
+      expect(response.body.data.meetings[0]).toHaveProperty('meetingCode');
+      expect(response.body.data.meetings[0]).toHaveProperty('status');
+      expect(response.body.data.meetings[0]).toHaveProperty('participants');
     });
 
     it('should return meetings in descending order by date', async () => {
@@ -226,9 +231,9 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.meetings[0].title).toBe('Third Meeting');
-      expect(response.body.meetings[1].title).toBe('Second Meeting');
-      expect(response.body.meetings[2].title).toBe('First Meeting');
+      expect(response.body.data.meetings[0].title).toBe('Third Meeting');
+      expect(response.body.data.meetings[1].title).toBe('Second Meeting');
+      expect(response.body.data.meetings[2].title).toBe('First Meeting');
     });
 
     it('should respect limit query parameter', async () => {
@@ -245,7 +250,8 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.meetings).toHaveLength(3);
+      expect(response.body.data.meetings).toHaveLength(3);
+      expect(response.body.data.total).toBe(3);
     });
 
     it('should default to 10 meetings when limit not specified', async () => {
@@ -262,7 +268,8 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.meetings).toHaveLength(10);
+      expect(response.body.data.meetings).toHaveLength(10);
+      expect(response.body.data.total).toBe(10);
     });
 
     it('should only return meetings for authenticated user', async () => {
@@ -279,8 +286,8 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token1}`)
         .expect(200);
 
-      expect(response.body.meetings).toHaveLength(1);
-      expect(response.body.meetings[0].title).toBe('User 1 Meeting');
+      expect(response.body.data.meetings).toHaveLength(1);
+      expect(response.body.data.meetings[0].title).toBe('User 1 Meeting');
     });
 
     it('should fail without authentication', async () => {
@@ -314,8 +321,9 @@ describe('Meeting Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
-      expect(response.body.meetings).toHaveLength(0);
-      expect(response.body.meetings).toEqual([]);
+      expect(response.body.data.meetings).toHaveLength(0);
+      expect(response.body.data.meetings).toEqual([]);
+      expect(response.body.data.total).toBe(0);
     });
   });
 

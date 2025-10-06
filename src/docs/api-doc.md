@@ -318,22 +318,35 @@ GET /api/meetings/recent?limit=5
 **Success Response (200):**
 ```json
 {
-  "meetings": [
-    {
-      "_id": "6542abc123def456789",
-      "title": "Team Standup",
-      "date": "2024-01-20T10:30:00.000Z",
-      "meetingCode": "A1B2C3D4",
-      "status": "scheduled"
-    },
-    {
-      "_id": "6542xyz987fed654321",
-      "title": "Project Review",
-      "date": "2024-01-19T14:00:00.000Z",
-      "meetingCode": "B2C3D4E5",
-      "status": "ended"
-    }
-  ]
+  "success": true,
+  "data": {
+    "meetings": [
+      {
+        "_id": "6542abc123def456789",
+        "title": "Team Standup",
+        "createdAt": "2024-01-20T10:30:00.000Z",
+        "meetingCode": "A1B2C3D4",
+        "status": "scheduled",
+        "participants": []
+      },
+      {
+        "_id": "6542xyz987fed654321",
+        "title": "Project Review",
+        "createdAt": "2024-01-19T14:00:00.000Z",
+        "meetingCode": "B2C3D4E5",
+        "status": "ended",
+        "participants": [
+          {
+            "userId": "6542abc123def456789",
+            "name": "John Doe",
+            "joinedAt": "2024-01-19T14:00:00.000Z",
+            "leftAt": "2024-01-19T15:00:00.000Z"
+          }
+        ]
+      }
+    ],
+    "total": 2
+  }
 }
 ```
 

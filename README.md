@@ -5,14 +5,20 @@ A robust, scalable backend API for ConnectPro video conferencing platform built 
 ## 🚀 Features
 
 - **User Authentication**: JWT-based authentication with bcrypt password hashing
+- **Guest Sessions**: Temporary guest access without registration
 - **RESTful API**: Well-structured REST API endpoints
 - **Real-time Communication**: Socket.IO integration for live features
+  - Real-time participant updates (join/leave)
+  - Live chat messaging with typing indicators
+  - WebRTC signaling for video/audio connections
+  - Participant status updates (camera/microphone)
+  - Meeting notifications and events
 - **Database**: MongoDB with Mongoose ODM
 - **TypeScript**: Fully typed codebase for enhanced developer experience
 - **Input Validation**: Express-validator for request validation
 - **Security**: CORS, password hashing, and JWT token management
 - **Error Handling**: Centralized error handling middleware
-- **API Documentation**: Comprehensive API documentation
+- **API Documentation**: Comprehensive API and Socket.IO documentation
 
 ## 🛠️ Tech Stack
 
@@ -103,8 +109,16 @@ connectpro-backend/
 │   ├── routes/              # API routes
 │   │   ├── auth.routes.ts
 │   │   └── meeting.routes.ts
+│   ├── socket/              # Socket.IO implementation
+│   │   ├── handlers/        # Event handlers
+│   │   │   ├── meetingHandler.ts
+│   │   │   ├── chatHandler.ts
+│   │   │   ├── webrtcHandler.ts
+│   │   │   └── notificationHandler.ts
+│   │   └── socket.ts        # Socket.IO setup
 │   ├── docs/                # API documentation
-│   │   └── api-doc.md
+│   │   ├── api-doc.md
+│   │   └── socket-io-events.md
 │   └── server.ts            # Application entry point
 ├── dist/                    # Compiled JavaScript (generated)
 ├── coverage/                # Test coverage reports (generated)
@@ -144,7 +158,9 @@ npm run copy-templates # Copy template files to dist
 
 ## 📚 API Documentation
 
-Full API documentation is available at [`src/docs/api-doc.md`](./src/docs/api-doc.md)
+Full API documentation is available at:
+- REST API: [`src/docs/api-doc.md`](./src/docs/api-doc.md)
+- Socket.IO Events: [`src/docs/socket-io-events.md`](./src/docs/socket-io-events.md)
 
 ### Quick Reference
 

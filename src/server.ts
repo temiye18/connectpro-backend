@@ -1,12 +1,16 @@
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import { createServer } from "http";
 import { connectDB } from "./config/database";
 import authRoutes from "./routes/auth.routes";
 import meetingRoutes from "./routes/meeting.routes";
+import { initializeSocket } from "./socket/socket";
 
 dotenv.config();
 const app = express();
+const httpServer = createServer(app);
+const io = initializeSocket(httpServer);
 
 app.use(
   cors({
@@ -58,10 +62,14 @@ connectDB()
   .then(() => {
     console.log("Database connection established...");
 
-    app.listen(process.env.PORT || 7777, () => {
+    httpServer.listen(process.env.PORT || 7777, () => {
       console.log(`Server is running on port ${process.env.PORT || 7777}`);
+      console.log("Socket.IO server initialized");
     });
   })
   .catch((err) => {
     console.log(err, "Database connection cannot be established...");
   });
+
+// Export io for use in other modules if needed
+export { io };
